@@ -4,7 +4,7 @@ The application has two outputs: a Worker serving the full application and API, 
 
 ## Worker and database
 
-Install dependencies and run `pnpm setup`. Then authenticate Wrangler with your own Cloudflare account and create a database:
+Install dependencies and run `pnpm run setup`. Then authenticate Wrangler with your own Cloudflare account and create a database:
 
 ```sh
 pnpm exec wrangler login
@@ -18,7 +18,7 @@ Apply migrations and deploy:
 ```sh
 pnpm db:migrate:remote
 pnpm build
-pnpm deploy
+pnpm run deploy
 ```
 
 The deployment command uses the generated configuration in `dist/server/wrangler.json`. Review the target account and database before running commands with `--remote`.

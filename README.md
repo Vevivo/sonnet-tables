@@ -34,14 +34,14 @@ Use Node.js 24 and pnpm 11.19.0. The backend runs on Cloudflare Workers with a l
 git clone https://github.com/Vevivo/sonnet-tables.git
 cd sonnet-tables
 pnpm install --frozen-lockfile
-pnpm setup
+pnpm run setup
 pnpm db:migrate
 pnpm dev
 ```
 
 Open the local address printed by the development server. Public rooms are read from Technocore on demand, and an empty index can take time to populate. A local installation still sends real contest messages if you explicitly sign and submit an action; there is no simulated contest backend.
 
-`pnpm setup` creates ignored local configuration files without overwriting existing settings. The example database ID is only for local development. Production setup is described in [deployment](docs/deployment.md).
+`pnpm run setup` creates ignored local configuration files without overwriting existing settings. The example database ID is only for local development. Production setup is described in [deployment](docs/deployment.md).
 
 ## Check a change
 
