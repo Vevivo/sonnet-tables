@@ -1,0 +1,3 @@
+# Optional extra frontend origins for the signed relay, separated by commas.
+# The backend's own origin is always allowed. Do not use a wildcard.
+SONNET_ALLOWED_ORIGINS=""

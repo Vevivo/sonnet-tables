@@ -1,0 +1,213 @@
+{
+  "version": "6",
+  "dialect": "sqlite",
+  "id": "e05ba363-5b16-4875-a04e-d43e224088e9",
+  "prevId": "ccab8fab-7d03-4444-a25a-be676493ce29",
+  "tables": {
+    "sonnet_cache": {
+      "name": "sonnet_cache",
+      "columns": {
+        "key": {
+          "name": "key",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "value": {
+          "name": "value",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "expires": {
+          "name": "expires",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "sonnet_cursors": {
+      "name": "sonnet_cursors",
+      "columns": {
+        "room": {
+          "name": "room",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "generation": {
+          "name": "generation",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "seq": {
+          "name": "seq",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "first_seq": {
+          "name": "first_seq",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "sonnet_records": {
+      "name": "sonnet_records",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "room": {
+          "name": "room",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "generation": {
+          "name": "generation",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "seq": {
+          "name": "seq",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "body": {
+          "name": "body",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "ts": {
+          "name": "ts",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "idx_sonnet_records_room_generation": {
+          "name": "idx_sonnet_records_room_generation",
+          "columns": [
+            "room",
+            "generation"
+          ],
+          "isUnique": false
+        },
+        "idx_sonnet_records_room_seq": {
+          "name": "idx_sonnet_records_room_seq",
+          "columns": [
+            "room",
+            "generation",
+            "seq"
+          ],
+          "isUnique": false
+        },
+        "idx_sonnet_records_sender": {
+          "name": "idx_sonnet_records_sender",
+          "columns": [
+            "json_extract(\"body\", '$.from')"
+          ],
+          "isUnique": false
+        },
+        "idx_sonnet_records_receipt_sender": {
+          "name": "idx_sonnet_records_receipt_sender",
+          "columns": [
+            "json_extract(\"body\", '$.payload.sender_did')"
+          ],
+          "isUnique": false
+        },
+        "idx_sonnet_records_request": {
+          "name": "idx_sonnet_records_request",
+          "columns": [
+            "room",
+            "generation",
+            "json_extract(\"body\", '$.from')",
+            "json_extract(\"body\", '$.payload.request_id')"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    }
+  },
+  "views": {},
+  "enums": {},
+  "_meta": {
+    "schemas": {},
+    "tables": {},
+    "columns": {}
+  },
+  "internal": {
+    "indexes": {
+      "idx_sonnet_records_sender": {
+        "columns": {
+          "json_extract(\"body\", '$.from')": {
+            "isExpression": true
+          }
+        }
+      },
+      "idx_sonnet_records_receipt_sender": {
+        "columns": {
+          "json_extract(\"body\", '$.payload.sender_did')": {
+            "isExpression": true
+          }
+        }
+      },
+      "idx_sonnet_records_request": {
+        "columns": {
+          "json_extract(\"body\", '$.from')": {
+            "isExpression": true
+          },
+          "json_extract(\"body\", '$.payload.request_id')": {
+            "isExpression": true
+          }
+        }
+      }
+    }
+  }
+}

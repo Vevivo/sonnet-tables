@@ -1,0 +1,45 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {DatabaseSync} from 'node:sqlite';
+import {readFileSync} from 'node:fs';
+import {sourceUrl} from './source-loader.mjs';
+const {readIdentityHistory}=await import(sourceUrl('lib/identity-history.ts'));
+const {ROOM,REFEREE,MANIFEST_HASH}=await import(sourceUrl('lib/sonnet-types.ts'));
+const {actionRecords,roleFrom,packet}=await import(sourceUrl('lib/participation.ts'));
+const {ballotHistory}=await import(sourceUrl('lib/voting.ts'));
+
+test('identity lookups avoid room scans and retain old registration and ballot evidence under heavy unrelated traffic',async()=>{
+ const sql=new DatabaseSync(':memory:');
+ sql.exec(readFileSync('drizzle/0000_panoramic_smasher.sql','utf8'));
+ sql.exec(readFileSync('drizzle/0001_grey_cardiac.sql','utf8'));
+ const plans=[];
+ const db={prepare(query){return {bind(...args){return {query,args};}};},async batch(statements){return statements.map(({query,args})=>{plans.push(...sql.prepare('EXPLAIN QUERY PLAN '+query).all(...args).map(r=>r.detail));return {results:sql.prepare(query).all(...args)};});}};
+ const add=(room,from,p,seq)=>{
+  const payload={contest_id:'sonnet-2',...p};
+  const m={room,from,payload,seq,generation:1,signatureValid:true,ts:new Date(1789300000000+seq).toISOString(),text:JSON.stringify(payload)};
+  sql.prepare('INSERT INTO sonnet_records VALUES(?,?,?,?,?,?)').run(`${room}:1:${seq}`,room,1,seq,JSON.stringify(m),m.ts);return m;
+ };
+ const did='existing-voter';
+ const launch=add(ROOM.rules,REFEREE,{type:'sonnet.launch.v1',configuration:{contest_id:'sonnet-2',referee:REFEREE},package:{sha256:MANIFEST_HASH}},1);
+ add(ROOM.registration,did,{type:'sonnet.register.v1',request_id:'original',role:'voter'},2);
+ add(ROOM.registration,REFEREE,{type:'sonnet.receipt.v1',request_id:'original',sender_did:did,participant_did:did,role:'voter',status:'accepted',intake_seq:1},3);
+ add(ROOM.votes,did,{type:'sonnet.ballot.v1',request_id:'ballot',voter_did:did,entry_id:'love8'},4);
+ add(ROOM.votes,REFEREE,{type:'sonnet.receipt.v1',request_id:'ballot',sender_did:did,status:'accepted',intake_seq:2},5);
+ add(ROOM.votes,did,{type:'sonnet.ballot.v1',request_id:'bad',voter_did:did,entry_id:'bad'},6);
+ add(ROOM.votes,REFEREE,{type:'sonnet.receipt.v1',request_id:'bad',sender_did:did,status:'rejected',intake_seq:3},7);
+ sql.exec('BEGIN');
+ for(let i=0;i<20000;i++)add(ROOM.registration,'unrelated-'+i,{type:'sonnet.register.v1',request_id:'noise-'+i,role:'voter'},1000+i);
+ for(let i=0;i<250;i++)add(ROOM.discovery,did,{type:'sonnet.note.v1',request_id:'note-'+i,text:'later discussion'},30000+i);
+ sql.exec('COMMIT');
+ const recent=await readIdentityHistory(db,did,{limit:200});
+ assert.equal(recent.length,200);assert.equal(recent.some(m=>m.room===ROOM.registration),false);
+ const registry=await readIdentityHistory(db,did,{rooms:[ROOM.registration,ROOM.votes]});
+ assert.equal(registry.length,6);assert.equal(registry.some(m=>m.from.startsWith('unrelated')),false);
+ const records=actionRecords([launch,...recent,...registry],did);
+ assert.equal(roleFrom(records).role,'voter');assert.equal(roleFrom(records).registration,'confirmed');
+ assert.equal(packet(ballotHistory(records,did).accepted.request).entry_id,'love8');
+ assert.ok(plans.some(p=>p.includes('idx_sonnet_records_sender')));
+ assert.ok(plans.some(p=>p.includes('idx_sonnet_records_receipt_sender')));
+ assert.equal(plans.some(p=>p.includes('SCAN sonnet_records')||p.includes('idx_sonnet_records_room')||p.includes('idx_sonnet_records_request')),false);
+ sql.close();
+});

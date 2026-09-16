@@ -1,0 +1,1 @@
+CREATE INDEX `idx_sonnet_records_vote_receipts` ON `sonnet_records` (`room`,json_extract("body", '$.from'),`id`) WHERE json_extract("sonnet_records"."body", '$.payload.type')='sonnet.receipt.v1' AND json_extract("sonnet_records"."body", '$.payload.status')='accepted';

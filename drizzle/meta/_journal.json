@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1789127663752,
+      "tag": "0000_panoramic_smasher",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1789336733823,
+      "tag": "0001_grey_cardiac",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1789549929386,
+      "tag": "0002_broad_ogun",
+      "breakpoints": true
+    }
+  ]
+}

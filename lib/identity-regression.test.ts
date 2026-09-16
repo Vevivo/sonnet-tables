@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';
+import {projectMessages} from './sonnet-projector';
+import {ROOM,REFEREE,CONTEST,MANIFEST_HASH,type Message} from './sonnet-types';
+const self='did:key:z6MkomW7khvZMAndeL1JevjuRgUe9rbrgjd7evysvdeUHfpX';
+const peer='did:key:z6MkhQ7X9bFg5EdtAxtJJsGzPAcVnVFDaqjyUEqbhdR3jLmt';
+const row=(room:string,seq:number,from:string,payload:Record<string,unknown>):Message=>({room,seq,from,payload,text:JSON.stringify(payload),ts:new Date(1700000000000+seq*1000).toISOString(),generation:1,signatureValid:true});
+const note=row(ROOM.discovery,90,self,{type:'sonnet.note.v1',contest_id:CONTEST,game_id:'bae-2',writer_did:self,x_account_url:'https://x.com/vevivolabs',text:'Hello'});
+let result=projectMessages([note],REFEREE).writers.find(w=>w.did===self)!;
+assert.equal(result.name,'vevivolabs');assert.equal(result.registration,'unknown');
+const spoof=row(ROOM.discovery,91,peer,{...note.payload,writer_did:self});
+assert.notEqual(projectMessages([spoof],REFEREE).writers.find(w=>w.did===peer)?.name,'VevivoLabs');
+const launch=row(ROOM.rules,1,REFEREE,{type:'sonnet.launch.v1',configuration:{contest_id:CONTEST,referee:REFEREE},package:{sha256:MANIFEST_HASH}});
+const request=row(ROOM.registration,2,self,{type:'sonnet.register.v1',contest_id:CONTEST,request_id:'registration',role:'writer',x_account_url:'https://x.com/vevivolabs'});
+const receipt=row(ROOM.registration,3,REFEREE,{type:'sonnet.receipt.v1',contest_id:CONTEST,request_id:'registration',sender_did:self,participant_did:self,role:'writer',x_account_url:'https://x.com/vevivolabs',intake_seq:1,status:'accepted'});
+result=projectMessages([launch,request,receipt,note],REFEREE).writers.find(w=>w.did===self)!;
+assert.equal(result.name,'vevivolabs');assert.equal(result.registration,'confirmed');assert.equal(result.did,self);
+console.log('Identity regression checks passed: stable name, exact DID, no false acceptance or cross-identity label.');
